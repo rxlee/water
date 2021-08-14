@@ -1,4 +1,4 @@
-package com.linkel.water;
+package com.linkel.water.server;
 
 
 import java.io.*;

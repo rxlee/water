@@ -71,10 +71,11 @@ public class Client extends Frame {
 
         public void actionPerformed(ActionEvent e) {
             String str = tfTxt.getText().trim();
+            long l = Long.parseLong(str);
             tfTxt.setText("");
 
             try {
-                dos.writeUTF(str);
+                dos.writeLong(l);
                 dos.flush();
             } catch (IOException e1) {
                 e1.printStackTrace();
@@ -89,8 +90,8 @@ public class Client extends Frame {
         public void run() {
             try {
                 while (bConnected) {
-                    String str = dis.readUTF();
-                    taContent.setText(taContent.getText() + str + '\n');
+                    int num = dis.readInt();
+                    taContent.setText(taContent.getText() + num+"=="+Integer.toHexString(num)  + '\n');
                 }
             } catch (SocketException e) {
                 System.out.println("退出了，bye!");

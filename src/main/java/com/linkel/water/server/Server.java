@@ -1,18 +1,23 @@
 package com.linkel.water.server;
 
 
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
+
 import java.io.*;
 import java.net.*;
 import java.util.*;
 
+@Component
+@Qualifier("server")
 public class Server {
     boolean started = false;
     ServerSocket ss = null;
     List<Client> clients = new ArrayList<Client>();
 
-    public static void main(String[] args) {
-        new Server().start();
-    }
+//    public static void main(String[] args) {
+//        new Server().start();
+//    }
 
     public void start() {
         try {
@@ -63,9 +68,9 @@ public class Server {
             }
         }
 
-        public void send(String str) {
+        public void send(int num) {
             try {
-                dos.writeUTF(str);
+                dos.writeInt(num);
             } catch (IOException e) {
                 clients.remove(this);
                 System.out.println("对方退出了！我从List里面去掉了！");
@@ -75,11 +80,15 @@ public class Server {
         public void run() {
             try {
                 while (bConnected) {
-                    String str = dis.readUTF();
-                    System.out.println("------------来自本地服务器:" + str);
+                    int num = dis.readInt();
+                    System.out.println("------------来自本地服务器:" + num+"=="+Integer.toHexString(num));
+                    System.out.println("--------------------------1:" + (num>>24 & 0xFF));
+                    System.out.println("--------------------------2:" + (num>>16 & 0xFF));
+                    System.out.println("--------------------------3:" + (num>>8 & 0xFF));
+                    System.out.println("--------------------------4:" + (num & 0xFF));
                     for (int i = 0; i < clients.size(); i++) {
                         Client c = clients.get(i);
-                        c.send(str);
+                        c.send(num);
                     }
                 }
             } catch (EOFException e) {

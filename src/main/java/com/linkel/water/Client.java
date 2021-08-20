@@ -16,7 +16,7 @@ public class Client extends Frame {
     Thread tRecv = new Thread(new RecvThread());
 
     public static void main(String[] args) {
-        new Client().launchFrame(8888);
+        new Client().launchFrame(9560);
     }
 
     public void launchFrame(int port) {
@@ -43,7 +43,7 @@ public class Client extends Frame {
 
     public void connect(int port) {
         try {
-            s = new Socket("127.0.0.1", port);
+            s = new Socket("192.168.1.147", port);
             dos = new DataOutputStream(s.getOutputStream());
             dis = new DataInputStream(s.getInputStream());
             System.out.println("~~~~~~~~连接成功~~~~~~~~!");
@@ -71,11 +71,13 @@ public class Client extends Frame {
 
         public void actionPerformed(ActionEvent e) {
             String str = tfTxt.getText().trim();
-            long l = Long.parseLong(str);
+//            long l = Long.parseLong(str);
+
             tfTxt.setText("");
 
             try {
-                dos.writeLong(l);
+//                dos.writeLong(l);
+                dos.writeUTF(str);
                 dos.flush();
             } catch (IOException e1) {
                 e1.printStackTrace();
@@ -90,8 +92,10 @@ public class Client extends Frame {
         public void run() {
             try {
                 while (bConnected) {
-                    int num = dis.readInt();
-                    taContent.setText(taContent.getText() + num+"=="+Integer.toHexString(num)  + '\n');
+                    String str = dis.readUTF();
+                    taContent.setText(taContent.getText() + str + '\n');
+//                    int num = dis.readInt();
+//                    taContent.setText(taContent.getText() + num+"=="+Integer.toHexString(num)  + '\n');
                 }
             } catch (SocketException e) {
                 System.out.println("退出了，bye!");

@@ -2,6 +2,8 @@ package com.linkel.water.server;
 
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
@@ -10,10 +12,14 @@ import java.util.*;
 
 @Component
 @Qualifier("server")
+@PropertySource(value= "classpath:/application.properties")
 public class Server {
     boolean started = false;
     ServerSocket ss = null;
     List<Client> clients = new ArrayList<Client>();
+
+    @Value("${tcp.port}")
+    private int tcpPort;
 
 //    public static void main(String[] args) {
 //        new Server().start();
@@ -21,7 +27,7 @@ public class Server {
 
     public void start() {
         try {
-            ss = new ServerSocket(8888);
+            ss = new ServerSocket(tcpPort);
             started = true;
             System.out.println("端口已开启,占用8888端口号....");
         } catch (BindException e) {
@@ -53,6 +59,7 @@ public class Server {
 
     class Client implements Runnable {
         private Socket s;
+        private SocketAddress ip;
         private DataInputStream dis = null;
         private DataOutputStream dos = null;
         private boolean bConnected = false;
@@ -60,6 +67,7 @@ public class Server {
         public Client(Socket s) {
             this.s = s;
             try {
+                ip = s.getRemoteSocketAddress();
                 dis = new DataInputStream(s.getInputStream());
                 dos = new DataOutputStream(s.getOutputStream());
                 bConnected = true;
@@ -68,27 +76,28 @@ public class Server {
             }
         }
 
-        public void send(int num) {
+        public void send(byte b) {
             try {
-                dos.writeInt(num);
+                dos.writeByte(b);
             } catch (IOException e) {
-                clients.remove(this);
-                System.out.println("对方退出了！我从List里面去掉了！");
+                try {
+                    //尝试重连
+                    s.connect(ip,15);
+                } catch (IOException ex) {
+                    clients.remove(this);
+                    System.out.println("对方退出了！我从List里面去掉了！");
+                }
             }
         }
 
         public void run() {
             try {
                 while (bConnected) {
-                    int num = dis.readInt();
-                    System.out.println("------------来自本地服务器:" + num+"=="+Integer.toHexString(num));
-                    System.out.println("--------------------------1:" + (num>>24 & 0xFF));
-                    System.out.println("--------------------------2:" + (num>>16 & 0xFF));
-                    System.out.println("--------------------------3:" + (num>>8 & 0xFF));
-                    System.out.println("--------------------------4:" + (num & 0xFF));
+                    byte b = dis.readByte();
+                    System.out.println("------------来自本地服务器:" + b+"=="+Integer.toHexString(b&0xFF));
                     for (int i = 0; i < clients.size(); i++) {
                         Client c = clients.get(i);
-                        c.send(num);
+                        c.send(b);
                     }
                 }
             } catch (EOFException e) {
